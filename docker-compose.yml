@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  webserver:
+    build: ./webserver
+    restart: always
+    expose:
+      - 5000
+    volumes:
+      - ./webserver/flaskapp:/usr/src/app
+      - staticfiles:/usr/src/app/static
+    # env_file: .envweb
+    command: /usr/local/bin/gunicorn wsgi:app -w 2 -b :5000
+    networks:
+      - services_network
+    # depends_on:
+    #   - postgres
+  nginx:
+    build: ./nginx
+    #image: nginx:latest
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # - ./nginx/ssl:/etc/ssl
+      - staticfiles:/staticfiles
+    networks:
+      - services_network
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - webserver
+  # postgres:
+  #   restart: always
+  #   image: postgres:latest
+  #   ports:
+  #     - 5432:5432
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data/
+  #   env_file: .envdb
+  #   networks:
+  #     - services_network
+
+volumes:
+  pgdata:
+  staticfiles:
+
+networks:
+  services_network:
